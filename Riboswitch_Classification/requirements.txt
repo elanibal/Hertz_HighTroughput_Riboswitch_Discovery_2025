@@ -1,0 +1,11 @@
+# Riboswitch_Classification dependencies.
+# Verified present in the repo's conda base env (Python 3.11.7); no new installs were
+# required for this session. Versions below are what the code was developed/tested against.
+# The paper's declared stack is Python 3.10.9 — the pure-Python classifier logic is
+# version-agnostic across 3.10/3.11.
+biopython>=1.78      # tested 1.85   — Entrez efetch, SeqIO (from Prepping_sequences/NCBI_CDS)
+pandas>=2.2          # tested 2.3.3  — table assembly / CSV
+ViennaRNA>=2.6       # tested 2.7.2  — RNA.fold() hairpin ΔG (ARNold substitute)
+requests>=2.28       # tested 2.33.0 — Rfam seed download
+# Not required (documented substitution): selenium/chromedriver (ARNold webserver),
+# Infernal, MUSCLE, R-scape — those belong to the covariation stage, not classification.
