@@ -65,6 +65,14 @@ are the empty string `""` (never a silent `0`/`NaN`), except numeric ΔG which i
 | 9 | `downstream_gene_product` | str | NCBI CDS `product` qualifier of the first downstream ORF (from `NCBI_CDS.ipynb`); the primary evidence for ON vs OFF. |
 | 10 | `downstream_gene` | str | Gene symbol/locus tag when available; disambiguates generic products (e.g. `thiC` vs "hypothetical protein"). |
 | 11 | `nts_to_start_codon` | int | Distance (nt) from aptamer 3′ end to the downstream start codon; defines the window in which the SD and terminator must fall. |
+| 11a | `cds_extends_beyond_window` | bool | The downstream CDS *start* was found in-window but the ORF does not *close* within the search window (600 nt) — a real gene we only partially captured, flagged as a candidate for window extension (requested by A. Arce). |
+
+### 1.3b Leader micro-ORFs (uORFs)
+
+| # | Column | Type | Justification |
+|---|--------|------|---------------|
+| 11b | `microORF_count` | int | Number of small ORFs (start codon → in-frame stop, 2–50 aa) found in the leader (aptamer + EP upstream of the main start). uORFs can couple translation to the aptamer switch (leader-peptide / SD-overlap mechanisms). |
+| 11c | `microORF` | str | Compact list of those uORFs: `start-end(aaLen,startCodon);…`; audit trail + candidate leader-peptide coordinates. |
 
 ### 1.4 Mechanism axis — transcriptional vs translational
 
@@ -157,7 +165,10 @@ version; the annotation rubric is the primary caller. See §4.)
 
 ## 3. Cross-class invariants
 
-- Columns 1–31, names, order, and enums are **frozen**. New classes populate the
+- Columns (currently 34: the numbered set above plus `cds_extends_beyond_window`,
+  `microORF_count`, `microORF`), names, order, and enums are **frozen**. The two
+  leader/CDS fields were added during the TPP pilot *before* any cross-class run, so
+  the "define once, never re-run" invariant still holds. New classes populate the
   same table; concatenation across classes is a plain `pd.concat`.
 - Class-specific knowledge lives **only** in the keyword lists of
   `classify/direction.py` and (optionally) the SD window width — never in the schema.

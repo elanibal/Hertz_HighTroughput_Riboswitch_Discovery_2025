@@ -48,7 +48,7 @@ def detect_sd(
     window_lo: int = 20,
     window_hi: int = 3,
     fold_context: int = 60,
-    seq_frac_for_sequestered: float = 0.5,
+    seq_frac_for_sequestered: float = 0.6,
 ) -> SDHit:
     """Find an SD upstream of the start codon and test whether it is sequestered.
 
@@ -103,10 +103,28 @@ def detect_sd(
     structure = ""
     if len(fold_dna) >= 4 and sd_in_fold_end <= len(fold_dna):
         structure, _mfe = RNA.fold(_to_rna(fold_dna))
-        sd_struct = structure[sd_in_fold_start:sd_in_fold_end]
-        paired = sum(1 for ch in sd_struct if ch in "()")
-        paired_fraction = round(paired / max(1, len(sd_struct)), 2)
-        sequestered = paired_fraction >= seq_frac_for_sequestered
+        # Base-pair table (1-indexed; 0 = unpaired) to inspect WHO the SD pairs with.
+        pt = RNA.ptable(structure)
+        paired = upstream = 0
+        for i in range(sd_in_fold_start, sd_in_fold_end):
+            partner = pt[i + 1] - 1
+            if partner < 0:
+                continue
+            paired += 1
+            if partner < sd_in_fold_start:      # 5'/upstream partner = anti-SD helix
+                upstream += 1
+        n = max(1, sd_in_fold_end - sd_in_fold_start)
+        paired_fraction = round(paired / n, 2)
+        upstream_fraction = upstream / n
+        # A regulatory sequestration = the SD is mostly paired AND mostly to an
+        # upstream (aptamer/EP-leader) partner, i.e. an anti-SD helix — not merely
+        # paired to whatever is nearby. NOTE: still an MFE single-structure proxy
+        # (DESIGN.md §4); over-calls in GC-rich aptamers, so translational is an
+        # UPPER BOUND. A rigorous call needs apo vs holo structures.
+        sequestered = (
+            paired_fraction >= seq_frac_for_sequestered
+            and upstream_fraction >= 0.5
+        )
 
     return SDHit(
         found=True,

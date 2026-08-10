@@ -12,6 +12,7 @@ from classify.terminator import find_terminator
 from classify.sd_detector import detect_sd
 from classify.direction import predict_direction
 from classify.classifier import classify_sequence
+from classify.microorf import find_microorfs
 from classify import schema
 
 # --- validated synthetic building blocks ---------------------------------------
@@ -120,6 +121,31 @@ def test_all_columns_present_and_ordered():
         strand="+", aptamer_seq="A" * 20, ep_seq=EP_TERMINATOR,
     )
     assert list(row.keys()) == schema.COLUMNS  # canonical order preserved
+
+def test_microorf_finds_small_orf():
+    # ATG + 4 codons + TAA  (aa_len 5), embedded in flanks
+    leader = "CCCC" + "ATG" + "AAAGGGCATTGC" + "TAA" + "GGGG"
+    res = find_microorfs(leader, min_aa=2, max_aa=50)
+    assert res.count >= 1
+    assert any(o.start_codon == "ATG" and o.aa_len == 5 for o in res.orfs)
+
+def test_microorf_respects_length_bounds():
+    leader = "ATG" + "TAA"          # zero-codon ORF -> below min_aa
+    assert find_microorfs(leader, min_aa=2).count == 0
+
+def test_microorf_none_when_no_orf():
+    assert find_microorfs("AAAAAAAAAAAAAAAA").count == 0
+
+def test_row_has_microorf_and_truncation_fields():
+    row = classify_sequence(
+        rfam_family="RF00059", aptamer_id="x", accession="x", genome_coords="x",
+        strand="+", aptamer_seq="A" * 20, ep_seq=EP_TERMINATOR,
+        cds_extends_beyond_window=True,
+    )
+    assert "microORF_count" in row and "microORF" in row
+    assert row["cds_extends_beyond_window"] is True
+    assert "candidate for extension" in row["notes"]
+    assert schema.validate_row(row) == []
 
 def test_sensitivity_bin_helper():
     assert schema.sensitivity_bin_from_delta("") == ""

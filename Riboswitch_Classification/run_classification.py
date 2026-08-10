@@ -79,6 +79,7 @@ def main(argv=None) -> int:
             downstream_gene_product=ann.downstream_gene_product,
             downstream_gene=ann.downstream_gene,
             nts_to_start_codon=ann.nts_to_start_codon,
+            cds_extends_beyond_window=ann.cds_extends_beyond_window,
             dg_threshold=args.dg_threshold,
         )
         if ann.error:

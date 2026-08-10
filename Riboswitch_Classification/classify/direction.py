@@ -19,24 +19,39 @@ OFF_KEYWORDS = [
     "synthase", "synthetase", "biosynthesis", "biosynthetic", "synthesis",
     "reductase", "dehydratase", "cyclase", "kinase", "phosphatase",
     "decarboxylase", "methyltransferase", "aminotransferase", "isomerase",
-    "salvage",
+    "salvage", "oxidoreductase", "oxidase", "dehydrogenase", "pyrophosphorylase",
+    "phosphorylase", "deformylase", "hydrolase", "hydroxymethyltransferase",
 ]
 ON_KEYWORDS = [
     "transporter", "permease", "efflux", "importer", "exporter", "import",
-    "export", "abc transporter", "mfs", "symporter", "antiporter", "channel",
-    "uptake", "detox", "resistance", "extrusion", "porter",
+    "export", "abc transporter", "abc transport", "transport", "mfs",
+    "symporter", "antiporter", "channel", "uptake", "detox", "resistance",
+    "extrusion", "porter", "solute binding", "solute-binding",
+    "substrate-binding", "substrate binding",
 ]
 
 # Class-specific overrides / boosters. Keys are Rfam accessions.
 # These make specific gene families decisive even when the generic rubric is weak.
 CLASS_KEYWORDS = {
     "RF00059": {  # TPP (thiamine pyrophosphate)
-        "OFF": ["thic", "thid", "thie", "thim", "thig", "thif", "thih",
-                "thiamine biosynthesis", "hydroxymethylpyrimidine",
-                "thiazole", "thiamin biosynthesis", "phosphomethylpyrimidine"],
-        "ON": ["thit", "thixyz", "pnuc", "ykoe", "ykod", "ykoc",
+        # Biosynthesis + salvage (feedback repression -> OFF).
+        # thiO = glycine/amino-acid oxidase; tenA/tenI/thi-4 = thiamine salvage
+        # (thiaminase II / aminopyrimidine aminohydrolase); pyrimidine deformylase
+        # = HMP-P biosynthesis. Short symbols matched as substrings (see _match).
+        "OFF": ["thic", "thid", "thie", "thim", "thig", "thif", "thih", "thio",
+                "thiamine biosynthesis", "thiamin biosynthesis",
+                "hydroxymethylpyrimidine", "hydroxyethylthiazole", "thiazole",
+                "phosphomethylpyrimidine", "methylpyrimidine", "pyrimidine",
+                "tena", "teni", "thi-4", "thiaminase", "thiamin-phosphate",
+                "thiamine phosphate", "thiamin phosphate"],
+        # Thiamine import (ON). tbpA/thiB = periplasmic thiamine-binding protein;
+        # ykoEDCF / thiXYZ / pnuT = thiamine ECF/ABC transporters; TonB receptor.
+        "ON": ["thit", "thixyz", "thix", "thiy", "thiz", "thib", "tbpa",
+               "pnuc", "pnut", "ykoe", "ykod", "ykoc", "ykof",
                "thiamine transporter", "thiamine abc", "thiamine uptake",
-               "thiamine-transport"],
+               "thiamine-transport", "thiamine transport", "thiamine-binding",
+               "thiamine binding", "thiamin-binding", "thiamin binding",
+               "tonb-dependent", "siderophore receptor"],
     },
 }
 

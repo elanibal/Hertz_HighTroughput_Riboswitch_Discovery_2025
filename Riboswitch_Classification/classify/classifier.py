@@ -13,6 +13,7 @@ from .terminator import find_terminator
 from .sd_detector import detect_sd
 from .mechanism import call_mechanism
 from .direction import predict_direction
+from .microorf import find_microorfs
 
 
 def _confidence(mech_call: str, direction, term, ep_len: int) -> str:
@@ -42,6 +43,7 @@ def classify_sequence(
     downstream_gene_product: str = "",
     downstream_gene: str = "",
     nts_to_start_codon="",
+    cds_extends_beyond_window: bool = False,
     dg_threshold: float = -8.0,
 ) -> dict:
     """Classify one riboswitch sequence into a schema-complete row dict."""
@@ -58,6 +60,7 @@ def classify_sequence(
         downstream_gene_product=downstream_gene_product,
         downstream_gene=downstream_gene,
         nts_to_start_codon=nts_to_start_codon,
+        cds_extends_beyond_window=bool(cds_extends_beyond_window),
     )
 
     notes = []
@@ -65,6 +68,20 @@ def classify_sequence(
         notes.append("no EP sequence (extension failed)")
     if row["ep_len"] and row["ep_len"] < 30:
         notes.append(f"short EP ({row['ep_len']} nt): terminator/SD may be truncated")
+    if cds_extends_beyond_window:
+        notes.append("downstream CDS not closed within search window (candidate for extension)")
+
+    # --- Leader micro-ORFs (uORFs): scan aptamer + EP up to the main start codon ----
+    try:
+        start_idx = int(nts_to_start_codon)
+    except (TypeError, ValueError):
+        start_idx = -1
+    leader = (aptamer_seq or "") + (ep_seq[:start_idx] if start_idx >= 0 else (ep_seq or ""))
+    # min_aa=8 suppresses the many chance 2-4 aa ORFs; a candidate-generation setting
+    # for leader peptides / SD-overlapping uORFs (validate downstream). See REPORT.md.
+    uorfs = find_microorfs(leader, min_aa=8, allow_alt_start=True)
+    row["microORF_count"] = uorfs.count
+    row["microORF"] = uorfs.summary()
 
     # --- Axis 1: mechanism -------------------------------------------------------
     term = find_terminator(ep_seq, dg_threshold=dg_threshold)

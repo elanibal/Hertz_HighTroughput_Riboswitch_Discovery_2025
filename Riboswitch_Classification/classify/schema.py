@@ -16,6 +16,9 @@ COLUMNS = [
     "aptamer_seq", "ep_seq", "ep_len",
     # downstream gene
     "downstream_gene_product", "downstream_gene", "nts_to_start_codon",
+    "cds_extends_beyond_window",
+    # leader micro-ORFs (uORFs)
+    "microORF_count", "microORF",
     # mechanism axis
     "has_intrinsic_terminator", "terminator_dG", "terminator_coords", "polyU_seq",
     "has_SD", "sd_seq", "anti_SD_overlap", "mechanism_call", "mechanism_evidence",
@@ -42,6 +45,8 @@ def empty_row() -> dict:
     row.update(
         ep_len=0,
         nts_to_start_codon="",
+        cds_extends_beyond_window=False,
+        microORF_count=0,
         has_intrinsic_terminator=False,
         has_SD=False,
         anti_SD_overlap=False,
