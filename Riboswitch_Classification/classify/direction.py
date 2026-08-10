@@ -12,6 +12,7 @@ matched keyword and the gene product string — is always recorded, per task spe
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 # Generic, class-agnostic keyword rubric ----------------------------------------
@@ -53,6 +54,20 @@ CLASS_KEYWORDS = {
                "thiamine binding", "thiamin-binding", "thiamin binding",
                "tonb-dependent", "siderophore receptor"],
     },
+    "RF00162": {  # SAM-I (S box) — methionine/SAM/cysteine biosynthesis & sulfur metab.
+        # SAM is the product of Met/SAM biosynthesis -> feedback repression (OFF).
+        "OFF": ["meta", "metb", "metc", "mete", "metf", "meth", "metk",
+                "metx", "metz", "methionine synthase", "methionine biosynthesis",
+                "s-adenosylmethionine synthetase", "sam synthetase", "sam synthase",
+                "homoserine", "cystathionine", "cysteine synthase", "cysteine biosynthesis",
+                "cysh", "cysk", "cyse", "cysteine desulfurase", "sulfate adenylyltransferase",
+                "sulfur", "sulfonate", "sulfite reductase", "trans-sulfuration",
+                "o-acetylhomoserine", "aspartate-semialdehyde",
+                "adenosylhomocysteinase", "sahh", "spermidine synthase"],
+        # Methionine / SAM import (ON) — less common for SAM-I.
+        "ON": ["metn", "metq", "methionine transporter", "methionine abc",
+               "methionine uptake", "methionine import", "metnpq", "d-methionine"],
+    },
 }
 
 
@@ -63,9 +78,19 @@ class DirectionCall:
     basis: str = "none"             # annotation | architecture | both | none
 
 
+def _is_gene_symbol(kw: str) -> bool:
+    """Short alphanumeric token (e.g. 'meth', 'metk', 'thic', 'tbpa') — must match as a
+    whole word so 'meth' (metH) does NOT match inside 'methionine', 'meta' inside
+    'metabolism', etc. Multi-word / hyphenated / long descriptive keywords use substring."""
+    return len(kw) <= 5 and kw.isalnum()
+
+
 def _match(text: str, keywords) -> str | None:
     for kw in keywords:
-        if kw in text:
+        if _is_gene_symbol(kw):
+            if re.search(r"\b" + re.escape(kw) + r"\b", text):
+                return kw
+        elif kw in text:
             return kw
     return None
 

@@ -79,6 +79,17 @@ def test_direction_generic_transport():
     d = predict_direction("MFS transporter", "", "RF99999")
     assert d.direction == "ON"
 
+def test_direction_gene_symbol_word_boundary():
+    # 'meth' (metH) must NOT match inside 'methionine' -> transporter stays ON
+    d = predict_direction("methionine ABC transporter ATP-binding protein", "metN", "RF00162")
+    assert d.direction == "ON", d.evidence
+    # but a real MetH product is OFF
+    assert predict_direction("5-methyltetrahydrofolate MetH", "metH", "RF00162").direction == "OFF"
+
+def test_direction_compound_name_substring_still_matches():
+    # long chemical keyword must still match inside a compound word
+    assert predict_direction("Phosphomethylpyrimidine kinase", "", "RF00059").direction == "OFF"
+
 
 # --- end-to-end row + schema integrity -----------------------------------------
 def test_row_transcriptional_off():
