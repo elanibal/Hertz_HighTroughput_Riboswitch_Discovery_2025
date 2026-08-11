@@ -63,7 +63,10 @@ CLASS_KEYWORDS = {
                 "cysh", "cysk", "cyse", "cysteine desulfurase", "sulfate adenylyltransferase",
                 "sulfur", "sulfonate", "sulfite reductase", "trans-sulfuration",
                 "o-acetylhomoserine", "aspartate-semialdehyde",
-                "adenosylhomocysteinase", "sahh", "spermidine synthase"],
+                "adenosylhomocysteinase", "sahh", "spermidine synthase",
+                # methionine (SAM) salvage & S-adenosyl-Met production
+                "adenosyltransferase", "methylthio", "methionine adenosyltransferase",
+                "mtna", "mtnk", "mtnw", "mtnb", "homocysteine methyltransferase"],
         # Methionine / SAM import (ON) — less common for SAM-I.
         "ON": ["metn", "metq", "methionine transporter", "methionine abc",
                "methionine uptake", "methionine import", "metnpq", "d-methionine"],
@@ -88,7 +91,8 @@ def _is_gene_symbol(kw: str) -> bool:
 def _match(text: str, keywords) -> str | None:
     for kw in keywords:
         if _is_gene_symbol(kw):
-            if re.search(r"\b" + re.escape(kw) + r"\b", text):
+            # allow one optional trailing digit (metK1, thiC2) but keep the word boundary
+            if re.search(r"\b" + re.escape(kw) + r"\d?\b", text):
                 return kw
         elif kw in text:
             return kw
